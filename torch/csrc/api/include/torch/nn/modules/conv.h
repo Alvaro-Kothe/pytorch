@@ -271,9 +271,6 @@ class ConvTransposeNdImpl : public ConvNdImpl<D, Derived> {
   using torch::nn::ConvNdImpl<D, Derived>::ConvNdImpl;
   explicit ConvTransposeNdImpl(detail::ConvNdOptions<D> options_)
       : ConvNdImpl<D, Derived>(options_) {
-    TORCH_INTERNAL_ASSERT(
-        std::holds_alternative<ExpandingArray<D>>(this->options.padding()),
-        "ConvTranspose padding cannot be a string");
   }
 
   /// Pretty prints the `ConvTranspose{1,2,3}d` module into the given `stream`.
