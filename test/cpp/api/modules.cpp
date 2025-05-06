@@ -207,6 +207,24 @@ TEST_F(ModulesTest, ConvTranspose1d) {
   ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3);
 }
 
+TEST_F(ModulesTest, ConvTranspose1dSameStrided) {
+  auto options = ConvTranspose1dOptions(3, 2, 3);
+  options.stride(1).padding(torch::kSame);
+  ConvTranspose1d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose1d model_invalid(options.stride(2)); }(),
+      "padding='same' is not supported for strided convolutions");
+}
+
+TEST_F(ModulesTest, ConvTranspose1dSameOutputPadding) {
+  auto options = ConvTranspose1dOptions(3, 2, 3);
+  options.stride(1).output_padding(0).padding(torch::kSame);
+  ConvTranspose1d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose1d model_invalid(options.output_padding(1)); }(),
+      "padding='same' only supports output_padding=0, but got 1 at dimension 0.");
+}
+
 TEST_F(ModulesTest, ConvTranspose2dEven) {
   ConvTranspose2d model(ConvTranspose2dOptions(3, 2, 3).stride(1).bias(false));
   model->weight.set_data(torch::arange(54.).view({2, 3, 3, 3}));
@@ -278,6 +296,24 @@ TEST_F(ModulesTest, ConvTranspose2dUneven) {
   ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3 * 2);
 }
 
+TEST_F(ModulesTest, ConvTranspose2dSameStrided) {
+  auto options = ConvTranspose2dOptions(3, 2, {3, 2});
+  options.stride({1, 1}).padding(torch::kSame);
+  ConvTranspose2d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose2d model_invalid(options.stride({1, 2})); }(),
+      "padding='same' is not supported for strided convolutions");
+}
+
+TEST_F(ModulesTest, ConvTranspose2dSameOutputPadding) {
+  auto options = ConvTranspose2dOptions(3, 2, {3, 2});
+  options.stride({1, 1}).output_padding({0, 0}).padding(torch::kSame);
+  ConvTranspose2d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose2d model_invalid(options.output_padding({0, 1})); }(),
+      "padding='same' only supports output_padding=0, but got 1 at dimension 1.");
+}
+
 TEST_F(ModulesTest, ConvTranspose3d) {
   ConvTranspose3d model(ConvTranspose3dOptions(2, 2, 2).stride(1).bias(false));
   model->weight.set_data(torch::arange(32.).reshape({2, 2, 2, 2, 2}));
@@ -296,6 +332,24 @@ TEST_F(ModulesTest, ConvTranspose3d) {
   s.backward();
   ASSERT_EQ(s.ndimension(), 0);
   ASSERT_TRUE(model->weight.grad().numel() == 2 * 2 * 2 * 2 * 2);
+}
+
+TEST_F(ModulesTest, ConvTranspose3dSameStrided) {
+  auto options = ConvTranspose3dOptions(2, 2, 2);
+  options.stride({1, 1, 1}).padding(torch::kSame);
+  ConvTranspose3d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose3d model_invalid(options.stride({1, 2, 1})); }(),
+      "padding='same' is not supported for strided convolutions");
+}
+
+TEST_F(ModulesTest, ConvTranspose3dSameOutputPadding) {
+  auto options = ConvTranspose3dOptions(2, 2, 2);
+  options.stride({1, 1, 1}).output_padding({0, 0, 0}).padding(torch::kSame);
+  ConvTranspose3d model_valid(options);
+  ASSERT_THROWS_WITH(
+      [&] { ConvTranspose3d model_invalid(options.output_padding({0, 0, 3})); }(),
+      "padding='same' only supports output_padding=0, but got 3 at dimension 2.");
 }
 
 TEST_F(ModulesTest, MaxPool1d) {
