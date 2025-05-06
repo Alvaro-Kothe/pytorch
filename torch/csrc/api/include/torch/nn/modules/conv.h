@@ -271,6 +271,15 @@ class ConvTransposeNdImpl : public ConvNdImpl<D, Derived> {
   using torch::nn::ConvNdImpl<D, Derived>::ConvNdImpl;
   explicit ConvTransposeNdImpl(detail::ConvNdOptions<D> options_)
       : ConvNdImpl<D, Derived>(options_) {
+    if (std::holds_alternative<torch::enumtype::kSame>(options_.padding())) {
+      for (const auto i : c10::irange(D)) {
+        const auto output_padding = (*options_.output_padding())[i];
+        TORCH_CHECK(
+          output_padding == 0,
+          "padding='same' only supports output_padding=0, but got ",
+          output_padding, " at dimension ", i, ".");
+      }
+    }
   }
 
   /// Pretty prints the `ConvTranspose{1,2,3}d` module into the given `stream`.
