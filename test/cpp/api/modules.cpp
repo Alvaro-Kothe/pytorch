@@ -4690,6 +4690,15 @@ TEST_F(ModulesTest, PrettyPrintConvTranspose) {
   ASSERT_EQ(
       c10::str(ConvTranspose1d(3, 4, 5)),
       "torch::nn::ConvTranspose1d(3, 4, kernel_size=5, stride=1)");
+  {
+    auto options = ConvTranspose1dOptions(3, 4, 5);
+    ASSERT_EQ(
+        c10::str(ConvTranspose1d(options.padding(torch::kSame))),
+        "torch::nn::ConvTranspose1d(3, 4, kernel_size=5, stride=1, padding='same')");
+    ASSERT_EQ(
+        c10::str(ConvTranspose1d(options.padding(torch::kValid))),
+        "torch::nn::ConvTranspose1d(3, 4, kernel_size=5, stride=1, padding='valid')");
+  }
 
   ASSERT_EQ(
       c10::str(ConvTranspose2d(3, 4, 5)),
@@ -4697,6 +4706,15 @@ TEST_F(ModulesTest, PrettyPrintConvTranspose) {
   ASSERT_EQ(
       c10::str(ConvTranspose2d(ConvTranspose2dOptions(3, 4, 5).stride(2))),
       "torch::nn::ConvTranspose2d(3, 4, kernel_size=[5, 5], stride=[2, 2])");
+  {
+    auto options = ConvTranspose2dOptions(3, 4, std::vector<int64_t>{5, 6});
+    ASSERT_EQ(
+        c10::str(ConvTranspose2d(options.padding(torch::kSame))),
+        "torch::nn::ConvTranspose2d(3, 4, kernel_size=[5, 6], stride=[1, 1], padding='same')");
+    ASSERT_EQ(
+        c10::str(ConvTranspose2d(options.padding(torch::kValid))),
+        "torch::nn::ConvTranspose2d(3, 4, kernel_size=[5, 6], stride=[1, 1], padding='valid')");
+  }
   {
     const auto options =
         ConvTranspose2dOptions(3, 4, std::vector<int64_t>{5, 6}).stride({1, 2});
@@ -4729,6 +4747,15 @@ TEST_F(ModulesTest, PrettyPrintConvTranspose) {
         "groups=2, "
         "bias=false, "
         "padding_mode=kCircular)");
+  }
+  {
+    auto options = ConvTranspose3dOptions(3, 4, std::vector<int64_t>{5, 6, 7});
+    ASSERT_EQ(
+        c10::str(ConvTranspose3d(options.padding(torch::kSame))),
+        "torch::nn::ConvTranspose3d(3, 4, kernel_size=[5, 6, 7], stride=[1, 1, 1], padding='same')");
+    ASSERT_EQ(
+        c10::str(ConvTranspose3d(options.padding(torch::kValid))),
+        "torch::nn::ConvTranspose3d(3, 4, kernel_size=[5, 6, 7], stride=[1, 1, 1], padding='valid')");
   }
 }
 

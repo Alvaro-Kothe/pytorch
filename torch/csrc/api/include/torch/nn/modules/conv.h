@@ -289,10 +289,16 @@ class ConvTransposeNdImpl : public ConvNdImpl<D, Derived> {
            << this->options.out_channels()
            << ", kernel_size=" << this->options.kernel_size()
            << ", stride=" << this->options.stride();
-    const auto& pad = padding();
-    if (*pad != *ExpandingArray<D>(0)) {
-      stream << ", padding=" << pad;
-    }
+    std::visit(
+      c10::overloaded(
+        [&](enumtype::kValid) { stream << ", padding='valid'"; },
+        [&](enumtype::kSame) { stream << ", padding='same'"; },
+        [&](const ExpandingArray<D>& pad) {
+          if (*pad != *ExpandingArray<D>(0)) {
+            stream << ", padding=" << pad;
+          }
+        }),
+      this->options.padding());
     if (*this->options.dilation() != *ExpandingArray<D>(1)) {
       stream << ", dilation=" << this->options.dilation();
     }
