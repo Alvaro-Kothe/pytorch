@@ -340,6 +340,44 @@ TEST_F(ModulesTest, ConvTranspose2dUneven) {
   ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3 * 2);
 }
 
+TEST_F(ModulesTest, ConvTranspose2dSameForward) {
+  ConvTranspose2d model(ConvTranspose2dOptions(3, 2, {3, 2})
+                            .stride(1)
+                            .bias(false)
+                            .padding(torch::kSame));
+  model->weight.set_data(torch::arange(36.).view({2, 3, 3, 2}));
+  auto x = torch::arange(50.).view({1, 2, 5, 5});
+  auto y = model(x);
+
+  // NOTE: The padding is symmetric on Height dimension (crop 1 on each side).
+  // The padding is asymmetric on width dimension,
+  // crop 1 on left and 0 on right.
+  auto expected = torch::tensor(
+      {{{{2180., 2264., 2348., 2432., 1276.},
+         {3751., 3889., 4027., 4165., 2183.},
+         {4441., 4579., 4717., 4855., 2543.},
+         {5131., 5269., 5407., 5545., 2903.},
+         {3928., 4028., 4128., 4228., 2208.}},
+
+        {{2924., 3056., 3188., 3320., 1732.},
+         {5047., 5257., 5467., 5677., 2957.},
+         {6097., 6307., 6517., 6727., 3497.},
+         {7147., 7357., 7567., 7777., 4037.},
+         {5392., 5540., 5688., 5836., 3024.}},
+
+        {{3668., 3848., 4028., 4208., 2188.},
+         {6343., 6625., 6907., 7189., 3731.},
+         {7753., 8035., 8317., 8599., 4451.},
+         {9163., 9445., 9727., 10009., 5171.},
+         {6856., 7052., 7248., 7444., 3840.}}}});
+  ASSERT_TRUE(torch::allclose(y, expected));
+
+  torch::Tensor s = y.sum();
+  s.backward();
+  ASSERT_EQ(s.ndimension(), 0);
+  ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3 * 2);
+}
+
 TEST_F(ModulesTest, ConvTranspose2dSameStrided) {
   auto options = ConvTranspose2dOptions(3, 2, {3, 2});
   options.stride({1, 1}).padding(torch::kSame);
