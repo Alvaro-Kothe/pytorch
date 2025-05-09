@@ -207,6 +207,50 @@ TEST_F(ModulesTest, ConvTranspose1d) {
   ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3);
 }
 
+TEST_F(ModulesTest, ConvTranspose1dSameForwardSymmetric) {
+  ConvTranspose1d model(
+      ConvTranspose1dOptions(3, 2, 3).stride(1).bias(false).padding(
+          torch::kSame));
+  model->weight.set_data(torch::arange(18.).view({2, 3, 3}));
+  auto x = torch::arange(20.).reshape({2, 2, 5});
+  auto y = model(x);
+  auto expected = torch::tensor(
+      {{{104., 179., 212., 245., 188.},
+        {140., 242., 293., 344., 260.},
+        {176., 305., 374., 443., 332.}},
+       {{304., 509., 542., 575., 428.},
+        {460., 752., 803., 854., 620.},
+        {616., 995., 1064., 1133., 812.}}});
+  ASSERT_TRUE(torch::allclose(y, expected));
+
+  torch::Tensor s = y.sum();
+  s.backward();
+  ASSERT_EQ(s.ndimension(), 0);
+  ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 3);
+}
+
+TEST_F(ModulesTest, ConvTranspose1dSameForwardAsymmetric) {
+  ConvTranspose1d model(
+      ConvTranspose1dOptions(3, 2, 3).stride(1).bias(false).padding(
+          torch::kSame));
+  model->weight.set_data(torch::arange(24.).view({2, 3, 4}));
+  auto x = torch::arange(20.).reshape({2, 2, 5});
+  auto y = model(x);
+  auto expected = torch::tensor(
+      {{{233., 350., 410., 350., 263.},
+        {317., 478., 570., 482., 359.},
+        {401., 606., 730., 614., 455.}},
+       {{653., 950., 1010., 830., 603.},
+        {977., 1398., 1490., 1202., 859.},
+        {1301., 1846., 1970., 1574., 1115.}}});
+  ASSERT_TRUE(torch::allclose(y, expected));
+
+  torch::Tensor s = y.sum();
+  s.backward();
+  ASSERT_EQ(s.ndimension(), 0);
+  ASSERT_EQ(model->weight.grad().numel(), 3 * 2 * 4);
+}
+
 TEST_F(ModulesTest, ConvTranspose1dSameStrided) {
   auto options = ConvTranspose1dOptions(3, 2, 3);
   options.stride(1).padding(torch::kSame);
