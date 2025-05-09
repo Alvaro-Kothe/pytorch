@@ -327,6 +327,13 @@ class ConvTransposeNdImpl : public ConvNdImpl<D, Derived> {
       const Tensor& input,
       const std::optional<at::IntArrayRef>& output_size,
       const ExpandingArray<D>& stride,
+      const detail::conv_padding_t<D>& padding,
+      const ExpandingArray<D>& kernel_size);
+
+  std::vector<int64_t> _output_padding(
+      const Tensor& input,
+      const std::optional<at::IntArrayRef>& output_size,
+      const ExpandingArray<D>& stride,
       const ExpandingArray<D>& padding,
       const ExpandingArray<D>& kernel_size);
 };
