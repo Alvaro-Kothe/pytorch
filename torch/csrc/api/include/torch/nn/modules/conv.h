@@ -319,8 +319,8 @@ class ConvTransposeNdImpl : public ConvNdImpl<D, Derived> {
   }
 
  protected:
-  const ExpandingArray<D>& padding() const {
-    return std::get<ExpandingArray<D>>(this->options.padding());
+  const detail::conv_padding_t<D>& padding() const {
+    return this->options.padding();
   }
 
   std::vector<int64_t> _output_padding(
