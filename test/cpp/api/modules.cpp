@@ -416,6 +416,27 @@ TEST_F(ModulesTest, ConvTranspose3d) {
   ASSERT_TRUE(model->weight.grad().numel() == 2 * 2 * 2 * 2 * 2);
 }
 
+TEST_F(ModulesTest, ConvTranspose3dSameForward) {
+  ConvTranspose3d model(
+      ConvTranspose3dOptions(2, 2, 2).stride(1).bias(false).padding(
+          torch::kSame));
+  model->weight.set_data(torch::arange(72.).reshape({2, 3, 2, 3, 2}));
+  auto x = torch::arange(16.).reshape({1, 2, 2, 2, 2});
+  auto y = model(x);
+  // crops (left, right): 1st_dim (1, 0); 2nd_dim (1, 1); 3rd_dim (1, 0).
+  auto expected = torch::tensor(
+      {{{{3736., 1992.}, {3976., 2120.}}, {{2504., 1324.}, {2656., 1404.}}},
+       {{{5176., 2760.}, {5416., 2888.}}, {{3416., 1804.}, {3568., 1884.}}},
+       {{{6616., 3528.}, {6856., 3656.}}, {{4328., 2284.}, {4480., 2364.}}}});
+
+  ASSERT_TRUE(torch::allclose(y, expected));
+
+  torch::Tensor s = y.sum();
+  s.backward();
+  ASSERT_EQ(s.ndimension(), 0);
+  ASSERT_TRUE(model->weight.grad().numel() == 2 * 3 * 2 * 3 * 2);
+}
+
 TEST_F(ModulesTest, ConvTranspose3dSameStrided) {
   auto options = ConvTranspose3dOptions(2, 2, 2);
   options.stride({1, 1, 1}).padding(torch::kSame);
